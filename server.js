@@ -16,3 +16,5 @@ app.use('/api/productCategory', require('./src/routes/productCategoryRoutes'));
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// will resume code by fixing product category
