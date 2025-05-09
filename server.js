@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./src/config/db');
-const Product=require('./src/models/Product');
+const path = require('path');
 
 dotenv.config();
 connectDB();
@@ -9,11 +9,9 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-// Routes
-// app.use('/api/auth', require('./src/routes/authRoutes'));
-// app.use('/api/products', require('./src/routes/productRoutes'));
-
 app.use('/api/products', require('./src/routes/productRoutes'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/productCategory', require('./src/routes/productCategoryRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
