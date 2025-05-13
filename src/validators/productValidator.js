@@ -14,20 +14,10 @@ const productValidationSchema = Joi.object({
     "number.positive": "Product price must be positive",
     "any.required": "Product price is required",
   }),
-  category: Joi.valid(
-    "Electronics",
-    "Clothing",
-    "Books",
-    "Beauty",
-    "Home",
-    "Toys",
-    "Other"
-  )
-    .required()
-    .messages({
-      "any.only": "Invalid category",
-      "any.required": "Product category is required",
-    }),
+  category: Joi.string().required().messages({
+    "any.required": "Product category is required",
+    "string.empty": "Product category cannot be empty",
+  }),
   brand: Joi.string(),
   stock: Joi.number().min(0).required().messages({
     "number.base": "Product Stock must be number",
@@ -40,14 +30,14 @@ const productValidationSchema = Joi.object({
         "string.uri": "Product image URL must be valid",
         "any.uri": "Product image is required",
       }),
-      alt: Joi.string().allow('').messages({
-        'string.base': 'Alt must be a string'
-      })
+      alt: Joi.string().allow("").messages({
+        "string.base": "Alt must be a string",
+      }),
     })
   ),
-  ratings:Joi.number(),
-  numReviews:Joi.number(),
-  isFeatured:Joi.boolean()
+  ratings: Joi.number(),
+  numReviews: Joi.number(),
+  isFeatured: Joi.boolean(),
 });
 
-module.exports=productValidationSchema
+module.exports = productValidationSchema;

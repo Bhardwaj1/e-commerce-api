@@ -1,12 +1,40 @@
 const ProductCategoryModel = require("../models/ProductCategoryModel");
-const { validateParentCategory } = require("../validators/parentCategoryValidator");
+const {
+  validateParentCategory,
+} = require("../validators/productCategoryValidator");
 const slugify = require("slugify");
 
 // Get all categories
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await ProductCategory.find();
-    res.json(categories);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const skip = (page - 1) * limit;
+
+    // Build search query
+    const searchQuery = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { slug: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } },
+          ],
+        }
+      : {};
+
+    const [categories, totalItems] = await Promise.all([
+      ProductCategoryModel.find(searchQuery).skip(skip).limit(limit),
+      ProductCategoryModel.countDocuments(searchQuery),
+    ]);
+
+    res.json({
+      currentPage:page,
+      totalPage:Math.ceil(totalItems/limit),
+      totalItems,
+      pageSize:categories.length,
+      data:categories
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -25,32 +53,62 @@ const getCategoryById = async (req, res) => {
 };
 
 const createProductCategory = async (req, res) => {
-    try {
-      // Get form data and the uploaded image
-      const { name, slug, description, isActive, sortOrder, metaTitle, metaDescription, keywords } = req.body;
-      
-      // Handling image upload
-      const image = req.file ? { url: `/uploads/${req.file.filename}`, alt: req.file.originalname } : null;
-  
-      const newCategory = new ProductCategoryModel({
-        name,
-        slug,
-        description,
-        image,
-        isActive,
-        sortOrder,
-        metaTitle,
-        metaDescription,
-        keywords
+  try {
+    const {
+      name,
+      slug,
+      description,
+      isActive,
+      sortOrder,
+      metaTitle,
+      metaDescription,
+      keywords,
+    } = req.body;
+
+    const existingCategory = await ProductCategoryModel.findOne({
+      name: name.trim(),
+    });
+    if (existingCategory) {
+      return res.status(400).json({
+        message: `${name} category already exists.`,
       });
-  
-      const savedCategory = await newCategory.save();
-      res.status(201).json(savedCategory);  // Return the created category as response
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: error.message });
     }
-  };
+
+    let keywordArray = [];
+    if (Array.isArray(keywords)) {
+      keywordArray = keywords;
+    } else if (typeof keywords === "string") {
+      keywordArray = keywords
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean);
+    }
+
+    const image = req.file
+      ? {
+          url: `/uploads/${req.file.filename}`,
+          alt: req.file.originalname || "category image",
+        }
+      : undefined;
+
+    const newCategory = new ProductCategoryModel({
+      name: name.trim(),
+      slug: slug || slugify(name, { lower: true }),
+      description,
+      image,
+      isActive,
+      sortOrder,
+      metaTitle,
+      metaDescription,
+      keywords: keywordArray,
+    });
+
+    const savedCategory = await newCategory.save();
+    return res.status(201).json(savedCategory);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 // Update category
 const updateCategory = async (req, res) => {
@@ -74,7 +132,7 @@ const updateCategory = async (req, res) => {
   }
 
   try {
-    const updatedCategory = await ProductCategory.findByIdAndUpdate(
+    const updatedCategory = await ProductCategoryModel.findByIdAndUpdate(
       req.params.id,
       data,
       { new: true }
@@ -90,7 +148,7 @@ const updateCategory = async (req, res) => {
 // Delete category
 const deleteCategory = async (req, res) => {
   try {
-    const deleted = await ProductCategory.findByIdAndDelete(req.params.id);
+    const deleted = await ProductCategoryModel.findByIdAndDelete(req.params.id);
     if (!deleted)
       return res.status(404).json({ message: "Category not found" });
     res.json({ message: "Category deleted successfully" });

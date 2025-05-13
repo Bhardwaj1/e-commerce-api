@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-const parentCategorySchema = Joi.object({
+const productCategorySchema = Joi.object({
   name: Joi.string()
     .trim()
     .min(2)
@@ -56,6 +56,4 @@ const parentCategorySchema = Joi.object({
     .optional(),
 });
 
-module.exports = {
-  validateParentCategory: (data) => parentCategorySchema.validate(data, { abortEarly: false })
-};
+module.exports =  productCategorySchema

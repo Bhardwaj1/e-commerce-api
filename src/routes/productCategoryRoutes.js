@@ -10,7 +10,7 @@ const {
   updateCategory,
   deleteCategory
 } = require('../controllers/productCategoryController');
-const { validateParentCategory } = require('../validators/parentCategoryValidator');
+const validateProductCategegory = require('../middleware/validateProductCategory');
 
 // Routes
 
@@ -21,10 +21,10 @@ router.get('/', getAllCategories);
 router.get('/:id', getCategoryById);
 
 // CREATE category with image upload and validation
-router.post('/', upload.single('image'), validateParentCategory, createProductCategory);
+router.post('/', upload.single('image'), validateProductCategegory, createProductCategory);
 
 // UPDATE category with optional image replacement
-router.put('/:id', upload.single('image'), validateParentCategory, updateCategory);
+router.put('/:id', upload.single('image'), validateProductCategegory, updateCategory);
 
 // DELETE category by ID
 router.delete('/:id', deleteCategory);
