@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const {productEnum}  = require("../constants/enum");
+const { productEnum } = require("../constants/enum");
 
 const productSchema = new mongoose.Schema({
   name: {
@@ -17,9 +17,9 @@ const productSchema = new mongoose.Schema({
     min: [0, "Price must be positive"],
   },
   category: {
-    type: String,
-    required: true,
-    enum: productEnum,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ProductCategory",
+    required: [true, "Product category is required"],
   },
   brand: {
     type: String,
@@ -53,6 +53,4 @@ const productSchema = new mongoose.Schema({
     default: Date.now(),
   },
 });
-
-const Product = mongoose.model("Product", productSchema);
-module.exports = Product;
+module.exports = mongoose.model("Product", productSchema);;
