@@ -5,7 +5,8 @@ const Product = require("../models/productModel");
 
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate("category","name slug _id");
+    const products = await Product.find({isDeleted:false}).populate("category","name slug _id");
+    console.log(products);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -146,8 +147,9 @@ const updateProduct = async (req, res) => {
 // Delete Product by Id
 
 const deleteProduct = async (req, res) => {
+
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    const deletedProduct = await Product.findByIdAndUpdate(req.params.id,{isDeleted:true},{new:true});
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product Not Found" });
     };
