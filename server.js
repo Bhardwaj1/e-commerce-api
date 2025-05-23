@@ -11,7 +11,7 @@ app.use(express.json());
 
 app.use('/api/products', require('./src/routes/productRoutes'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/productCategory', require('./src/routes/productCategoryRoutes'));
+app.use('/api/products/category', require('./src/routes/productCategoryRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
