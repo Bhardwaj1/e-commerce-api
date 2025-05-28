@@ -8,17 +8,16 @@ const slugify = require("slugify");
 const getAllCategories = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || '';
+    const limit = parseInt(req.query.pageSize) || 10;
+    const search = req.query.search || "";
     const skip = (page - 1) * limit;
 
-    // Build search query
     const searchQuery = search
       ? {
           $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { slug: { $regex: search, $options: 'i' } },
-            { description: { $regex: search, $options: 'i' } },
+            { name: { $regex: search, $options: "i" } },
+            { slug: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
           ],
         }
       : {};
@@ -29,11 +28,13 @@ const getAllCategories = async (req, res) => {
     ]);
 
     res.json({
-      currentPage:page,
-      totalPage:Math.ceil(totalItems/limit),
-      totalItems,
-      pageSize:categories.length,
-      data:categories
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
+        pageSize: limit,
+      },
+      data: categories,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,9 +76,7 @@ const createProductCategory = async (req, res) => {
     }
 
     let keywordArray = [];
-    if (Array.isArray(keywords)) {
-      keywordArray = keywords;
-    } else if (typeof keywords === "string") {
+    if (keywords.trim() != "") {
       keywordArray = keywords
         .split(",")
         .map((k) => k.trim())

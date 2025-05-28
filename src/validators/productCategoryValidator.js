@@ -51,8 +51,7 @@ const productCategorySchema = Joi.object({
     .max(160)
     .optional(),
 
-  keywords: Joi.array()
-    .items(Joi.string())
+  keywords: Joi.string()
     .optional(),
 });
 
