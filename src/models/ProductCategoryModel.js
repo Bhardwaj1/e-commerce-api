@@ -36,10 +36,15 @@ const productCategorySchema = new mongoose.Schema(
       type: String,
     },
     keywords: [{ type: String }],
+    isDeleted: {
+      type: Boolean,
+      default: false
+    }
   },
   {
     timestamps: true,
-  }
+  },
+  
 );
 
 module.exports = mongoose.model('ProductCategory', productCategorySchema);

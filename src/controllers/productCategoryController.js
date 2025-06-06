@@ -1,7 +1,5 @@
 const ProductCategoryModel = require("../models/ProductCategoryModel");
-const {
-  validateParentCategory,
-} = require("../validators/productCategoryValidator");
+const productCategorySchema = require("../validators/productCategoryValidator");
 const slugify = require("slugify");
 
 // Get all categories
@@ -12,7 +10,10 @@ const getAllCategories = async (req, res) => {
     const search = req.query.search || "";
     const skip = (page - 1) * limit;
 
-    const searchQuery = search
+    // Build search query including isDeleted: false
+    const baseFilter = { isDeleted: false };
+
+    const searchFilter = search
       ? {
           $or: [
             { name: { $regex: search, $options: "i" } },
@@ -22,9 +23,14 @@ const getAllCategories = async (req, res) => {
         }
       : {};
 
+    const finalQuery = {
+      ...baseFilter,
+      ...(search ? { $and: [baseFilter, searchFilter] } : {}),
+    };
+
     const [categories, totalItems] = await Promise.all([
-      ProductCategoryModel.find(searchQuery).skip(skip).limit(limit),
-      ProductCategoryModel.countDocuments(searchQuery),
+      ProductCategoryModel.find(finalQuery).skip(skip).limit(limit),
+      ProductCategoryModel.countDocuments(finalQuery),
     ]);
 
     res.json({
@@ -40,6 +46,7 @@ const getAllCategories = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Get category by ID
 const getCategoryById = async (req, res) => {
@@ -112,7 +119,6 @@ const createProductCategory = async (req, res) => {
 // Update category
 const updateCategory = async (req, res) => {
   const image = req.file ? `uploads/${req.file.filename}` : undefined;
-
   const data = {
     ...req.body,
     slug: req.body.slug || slugify(req.body.name, { lower: true }),
@@ -122,13 +128,13 @@ const updateCategory = async (req, res) => {
     data.image = image;
   }
 
-  const { error } = validateParentCategory(data);
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed",
-      details: error.details.map((e) => e.message),
-    });
-  }
+  // const { error } = productCategorySchema(data);
+  // if (error) {
+  //   return res.status(400).json({
+  //     message: "Validation failed",
+  //     details: error.details.map((e) => e.message),
+  //   });
+  // }
 
   try {
     const updatedCategory = await ProductCategoryModel.findByIdAndUpdate(
@@ -147,7 +153,7 @@ const updateCategory = async (req, res) => {
 // Delete category
 const deleteCategory = async (req, res) => {
   try {
-    const deleted = await ProductCategoryModel.findByIdAndDelete(req.params.id);
+    const deleted = await ProductCategoryModel.findByIdAndUpdate(req.params.id,{isDeleted:true},{new:true});
     if (!deleted)
       return res.status(404).json({ message: "Category not found" });
     res.json({ message: "Category deleted successfully" });
