@@ -1,24 +1,55 @@
 const ProductCategoryModel = require("../models/ProductCategoryModel");
-const Product = require("../models/productModel");
+const ProductModel = require("../models/ProductModel");
 
 // get All product
 
-const getProducts = async (req, res) => {
+const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({isDeleted:false}).populate("category","name slug _id");
-    console.log(products);
-    res.json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.pageSize) || 10;
+    const search = req.query.search || "";
+    const skip = (page - 1) * limit;
+
+    // Build search query including isDeleted: false
+    const baseFilter = { isDeleted: false };
+
+    const searchFilter = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { slug: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const finalQuery = {
+      ...baseFilter,
+      ...(search ? { $and: [baseFilter, searchFilter] } : {}),
+    };
+    const [products, totalItems] = await Promise.all([
+          ProductModel.find(finalQuery).populate('category',"name slug").skip(skip).limit(limit),
+          ProductModel.countDocuments(finalQuery),
+        ]);
+     res.json({
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
+        pageSize: limit,
+      },
+      data: products,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-
 };
 
 // get product by Id
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product Not Found" });
+    const product = await ProductModel.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "ProductModel Not Found" });
     res.json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -49,7 +80,7 @@ const createProduct = async (req, res) => {
   if (!categoryExists) {
     return res.status(400).json({ message: "Invalid category ID" });
   }
-  const newProduct = new Product({
+  const newProduct = new ProductModel({
     name,
     description,
     price,
@@ -69,7 +100,7 @@ const createProduct = async (req, res) => {
   }
 };
 
-// Update Product
+// Update ProductModel
 
 const updateProduct = async (req, res) => {
   try {
@@ -128,12 +159,12 @@ const updateProduct = async (req, res) => {
     );
 
     // Update and return the product
-    const updatedProduct = await Product.findByIdAndUpdate(id, updatedData, {
+    const updatedProduct = await ProductModel.findByIdAndUpdate(id, updatedData, {
       new: true,
     }).populate("category", "name slug");
 
     if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({ message: "ProductModel not found" });
     }
 
     res.status(200).json(updatedProduct);
@@ -144,16 +175,16 @@ const updateProduct = async (req, res) => {
 };
 
 
-// Delete Product by Id
+// Delete ProductModel by Id
 
 const deleteProduct = async (req, res) => {
 
   try {
-    const deletedProduct = await Product.findByIdAndUpdate(req.params.id,{isDeleted:true},{new:true});
+    const deletedProduct = await ProductModel.findByIdAndUpdate(req.params.id,{isDeleted:true},{new:true});
     if (!deletedProduct) {
-      return res.status(404).json({ message: "Product Not Found" });
+      return res.status(404).json({ message: "ProductModel Not Found" });
     };
-    res.json({ message: "Product Deleted" });
+    res.json({ message: "ProductModel Deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -161,7 +192,7 @@ const deleteProduct = async (req, res) => {
 
 
 module.exports = {
-  getProducts,
+  getAllProducts,
   getProductById,
   createProduct,
   updateProduct,

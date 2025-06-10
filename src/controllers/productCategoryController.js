@@ -1,5 +1,4 @@
 const ProductCategoryModel = require("../models/ProductCategoryModel");
-const productCategorySchema = require("../validators/productCategoryValidator");
 const slugify = require("slugify");
 
 // Get all categories

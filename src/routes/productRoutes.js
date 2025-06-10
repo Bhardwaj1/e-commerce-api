@@ -4,7 +4,7 @@ const validateProduct=require('../middleware/validateProduct');
 
 // Import controller function 
 const {
-    getProducts,
+    getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
@@ -12,7 +12,7 @@ const {
 }=require('../controllers/productController');
 const upload = require('../middleware/upload');
 
-router.get('/',getProducts);
+router.get('/',getAllProducts);
 router.get('/:id',getProductById);
 router.post('/',upload.array('images',5),validateProduct,createProduct);
 router.put('/:id',upload.array('images'),validateProduct,updateProduct);
