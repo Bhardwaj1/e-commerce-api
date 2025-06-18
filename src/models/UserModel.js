@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { required } = require('joi');
 
 const userSchema = new mongoose.Schema(
   {
@@ -18,7 +19,12 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: 6,
+      minlength: 8,
+    },
+    phone:{
+      type:String,
+      required:[true,"Phone is Required"],
+      minlength:10,
     },
     role: {
       type: String,
