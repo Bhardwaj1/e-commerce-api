@@ -12,7 +12,7 @@ const generateToken = (user) => {
     
 // 🔐 REGISTER CONTROLLER
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password,phone } = req.body;
 
   try {
     // Check if user already exists
@@ -21,8 +21,14 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    let userContact= await User.findOne({phone});
+
+    if (userContact) {
+      return res.status(400).json({message:'Phone Number already exists'});
+    }
+
     // Force role to customer
-    user = await User.create({ name, email, password, role: 'customer' });
+    user = await User.create({ name, email, password,phone, role: 'customer' });
 
     // Return token and user info
     res.status(201).json({
@@ -32,6 +38,7 @@ const register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone:user.phone
       },
     });
   } catch (err) {
